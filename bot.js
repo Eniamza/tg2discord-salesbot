@@ -4,12 +4,19 @@ import { Telegraf } from 'telegraf'
 import { message } from 'telegraf/filters'
 import { parseMessage } from './modules/parseMessage.js'
 import axios from 'axios'
-
+import { Client, Events, GatewayIntentBits } from 'discord.js'
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const bot = new Telegraf(process.env.BOT_TOKEN)
+
+client.once(Events.ClientReady, readyClient => {
+	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+});
 
 bot.on(message('text'), async (ctx) => {
     let text = ctx.message.text
     let entities = ctx.message.entities
+
+    // console.log(JSON.stringify(ctx.message, null, 2))
 
     let chatId = ctx.message.chat.id
     let userId = ctx.message.from.id
@@ -26,26 +33,30 @@ bot.on(message('text'), async (ctx) => {
         console.log("No embed found")
     }
 
-    let config = {
-      method: "POST",
-      url: process.env.WEBHOOK_URL,
-      headers: { "Content-Type": "application/json" },
-      data: disEmbed,
-   };
+  //   let config = {
+  //     method: "POST",
+  //     url: process.env.WEBHOOK_URL,
+  //     headers: { "Content-Type": "application/json" },
+  //     data: disEmbed,
+  //  };
 
-   axios(config)
-   .then((response) => {
-      console.log("Sales delivered successfully");
-      return response;
-   })
-   .catch((error) => {
-     console.log(error);
-     return error;
-   });
+  //  axios(config)
+  //  .then((response) => {
+  //     console.log("Sales delivered successfully");
+  //     return response;
+  //  })
+  //  .catch((error) => {
+  //    console.log(error);
+  //    return error;
+  //  });
+
+  const channel = client.channels.cache.get('932730922049110029');
+  channel.send({ embeds: disEmbed.embeds })
     
   })
 
 bot.launch()
+client.login(process.env.TOKEN);
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
