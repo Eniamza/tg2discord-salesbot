@@ -21,6 +21,9 @@ bot.on(message('text'), async (ctx) => {
     let chatId = ctx.message.chat.id
     let userId = ctx.message.from.id
     let isBot = ctx.message.from.is_bot
+    let userName = ctx.message.from.username
+
+    console.log(`Chat ID: ${chatId}, User ID: ${userId}, Is Bot: ${isBot}, User Name: ${userName}`)
 
     if ( chatId != process.env.CHAT_ID || userId != process.env.USER_ID || isBot == false ) {
         console.log("Not the right chat or user")
