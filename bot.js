@@ -1,65 +1,110 @@
-import 'dotenv/config'
+require("dotenv").config();
+const { Api,TelegramClient } = require("telegram");
+const { StringSession } = require("telegram/sessions");
+const { NewMessage } = require("telegram/events");
+const { MessageEntityTextUrl, MessageEntityUrl } = require("telegram/tl/custom/message");
+const { parseMessage } = require('./modules/parseMessage.js')
 
-import { Telegraf } from 'telegraf'
-import { message } from 'telegraf/filters'
-import { parseMessage } from './modules/parseMessage.js'
-import axios from 'axios'
-import { Client, Events, GatewayIntentBits } from 'discord.js'
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-const bot = new Telegraf(process.env.BOT_TOKEN)
+const { Client, Events, GatewayIntentBits } = require('discord.js')
+const disClient = new Client({ intents: [GatewayIntentBits.Guilds] });
+// const bot = new Telegraf(process.env.BOT_TOKEN)
+const apiID = Number(process.env.API_ID);
+const apiHash = process.env.API_HASH;
+const session = new StringSession(process.env.LOGIN_STRING); 
+const client = new TelegramClient(session, apiID, apiHash, {});
 
-client.once(Events.ClientReady, readyClient => {
-	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
-});
 
-bot.on(message('text'), async (ctx) => {
-    let text = ctx.message.text
-    let entities = ctx.message.entities
+// client.once(Events.ClientReady, readyClient => {
+// 	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+// });
 
-    // console.log(JSON.stringify(ctx.message, null, 2))
+// bot.on(message('text'), async (ctx) => {
+//     let text = ctx.message.text
+//     let entities = ctx.message.entities
 
-    let chatId = ctx.message.chat.id
-    let userId = ctx.message.from.id
-    let isBot = ctx.message.from.is_bot
-    let userName = ctx.message.from.username
+//     // console.log(JSON.stringify(ctx.message, null, 2))
 
-    console.log(`Chat ID: ${chatId}, User ID: ${userId}, Is Bot: ${isBot}, User Name: ${userName}`)
+//     let chatId = ctx.message.chat.id
+//     let userId = ctx.message.from.id
+//     let isBot = ctx.message.from.is_bot
+//     let userName = ctx.message.from.username
 
-    if ( chatId != process.env.CHAT_ID || userId != process.env.USER_ID || isBot == false ) {
-        console.log("Not the right chat or user")
-        return
-    }
+//     console.log(`Chat ID: ${chatId}, User ID: ${userId}, Is Bot: ${isBot}, User Name: ${userName}`)
 
-    let disEmbed = await parseMessage(text, entities)
+//     if ( chatId != process.env.CHAT_ID || userId != process.env.USER_ID || isBot == false ) {
+//         console.log("Not the right chat or user")
+//         return
+//     }
 
-    if (!disEmbed) {
-        console.log("No embed found")
-    }
+//     let disEmbed = await parseMessage(text, entities)
 
-  //   let config = {
-  //     method: "POST",
-  //     url: process.env.WEBHOOK_URL,
-  //     headers: { "Content-Type": "application/json" },
-  //     data: disEmbed,
-  //  };
+//     if (!disEmbed) {
+//         console.log("No embed found")
+//     }
 
-  //  axios(config)
-  //  .then((response) => {
-  //     console.log("Sales delivered successfully");
-  //     return response;
-  //  })
-  //  .catch((error) => {
-  //    console.log(error);
-  //    return error;
-  //  });
+//   //   let config = {
+//   //     method: "POST",
+//   //     url: process.env.WEBHOOK_URL,
+//   //     headers: { "Content-Type": "application/json" },
+//   //     data: disEmbed,
+//   //  };
 
-  const channel = client.channels.cache.get('932730922049110029');
-  channel.send({ embeds: disEmbed.embeds })
+//   //  axios(config)
+//   //  .then((response) => {
+//   //     console.log("Sales delivered successfully");
+//   //     return response;
+//   //  })
+//   //  .catch((error) => {
+//   //    console.log(error);
+//   //    return error;
+//   //  });
+
+//   const channel = client.channels.cache.get('932730922049110029');
+//   channel.send({ embeds: disEmbed.embeds })
     
-  })
+//   })
 
-bot.launch()
-client.login(process.env.TOKEN);
+// bot.launch()
+
+async function main() {
+    await client.connect()
+    console.log(await client.checkAuthorization())
+
+    client.addEventHandler(async (event) => {
+        const message = event.message;
+        if (message.chatId == Number(process.env.CHAT_ID) && message.fromId.userId == Number(process.env.USER_ID)) { //message.fromId.userId == 5386442585
+            if (message.message.includes("DooggieCoin [$DOOG]") && message.message.includes("Market Cap")) {
+                let text = message.message
+                let entities = message.entities
+
+                console.log(`Chat ID: ${chatId}, User ID: ${userId}, Is Bot: ${isBot}, User Name: ${userName}`)
+
+                if ( chatId != Number(process.env.CHAT_ID) || userId != Number(process.env.USER_ID) ) {
+                    console.log("Not the right chat or user")
+                    return
+                }
+
+                let disEmbed = await parseMessage(text, entities)
+
+                if (!disEmbed) {
+                    console.log("No embed found")
+                }
+
+                const channel = disClient.channels.cache.get('932730922049110029');
+                channel.send({ embeds: disEmbed.embeds })
+            }
+            else {
+                console.log("Not the right message")
+            }
+
+        }
+      }, new NewMessage({ chats: [-1002607514205] }));
+
+}
+
+main()
+
+// disClient.login(process.env.TOKEN);
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))

@@ -66,5 +66,5 @@
     return discordEmbed
 }
 
-export { discordEmbedJSONBuilder }
+module.exports = { discordEmbedJSONBuilder };
 
