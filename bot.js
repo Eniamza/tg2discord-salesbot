@@ -7,7 +7,6 @@ const { parseMessage } = require('./modules/parseMessage.js')
 
 const { Client, Events, GatewayIntentBits } = require('discord.js')
 const disClient = new Client({ intents: [GatewayIntentBits.Guilds] });
-// const bot = new Telegraf(process.env.BOT_TOKEN)
 const apiID = Number(process.env.API_ID);
 const apiHash = process.env.API_HASH;
 const session = new StringSession(process.env.LOGIN_STRING); 
@@ -70,19 +69,16 @@ async function main() {
     await client.connect()
     console.log(await client.checkAuthorization())
 
+    disClient.once(Events.ClientReady, readyClient => {
+        console.log(`Ready! Logged in as ${readyClient.user.tag}`);
+    })
+
     client.addEventHandler(async (event) => {
         const message = event.message;
         if (message.chatId == Number(process.env.CHAT_ID) && message.fromId.userId == Number(process.env.USER_ID)) { //message.fromId.userId == 5386442585
             if (message.message.includes("DooggieCoin [$DOOG]") && message.message.includes("Market Cap")) {
                 let text = message.message
                 let entities = message.entities
-
-                console.log(`Chat ID: ${chatId}, User ID: ${userId}, Is Bot: ${isBot}, User Name: ${userName}`)
-
-                if ( chatId != Number(process.env.CHAT_ID) || userId != Number(process.env.USER_ID) ) {
-                    console.log("Not the right chat or user")
-                    return
-                }
 
                 let disEmbed = await parseMessage(text, entities)
 
@@ -98,13 +94,16 @@ async function main() {
             }
 
         }
+        else {
+            console.log("Not the right chat or user")
+        }
       }, new NewMessage({ chats: [-1002607514205] }));
 
 }
 
 main()
 
-// disClient.login(process.env.TOKEN);
+disClient.login(process.env.TOKEN);
 
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
